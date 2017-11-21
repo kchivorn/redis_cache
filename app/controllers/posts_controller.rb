@@ -1,10 +1,14 @@
 class PostsController < ApplicationController
+  include PostsHelper
   before_action :set_post, only: [:show, :edit, :update, :destroy]
+  after_action :clear_cache, only: [:update, :create]
 
   # GET /posts
   # GET /posts.json
   def index
-    @posts = Post.all
+    @posts = Rails.cache.fetch("posts_store", expires_in: 2.hours) do
+      Post.all
+    end
   end
 
   # GET /posts/1
@@ -70,5 +74,9 @@ class PostsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def post_params
       params.require(:post).permit(:content)
+    end
+
+    def clear_cache
+      Rails.cache.delete("posts_store")
     end
 end
